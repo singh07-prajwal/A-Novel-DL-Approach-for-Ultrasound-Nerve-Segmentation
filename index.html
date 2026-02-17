@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Nerve Detection & Segmentation{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="hero-content">
+        <div class="hero-text">
+            <h1 class="hero-title">
+                <img src="https://img.icons8.com/color/64/000000/brain-3.png" alt="Brain">
+                Nerve Segmentation
+            </h1>
+            <p class="hero-subtitle">Advanced Medical Image Analysis for Nerve Detection and Segmentation</p>
+            <p class="hero-description">
+                Cutting-edge AI models for precise identification and segmentation of neural structures in ultrasound images.
+                Powered by state-of-the-art deep learning algorithms.
+            </p>
+            <div class="hero-buttons">
+                <a href="{{ url_for('yolo_detection') }}" class="btn btn-primary">
+                    <img src="https://img.icons8.com/color/24/000000/search.png" alt="Detection">
+                    Start Detection
+                </a>
+                <a href="{{ url_for('segmentation') }}" class="btn btn-secondary">
+                    <img src="https://img.icons8.com/?size=100&id=GPFgoEtWNhdd&format=png&color=000000" width="30" height="30" alt="Segmentation">
+                    Start Segmentation
+                </a>
+            </div>
+        </div>
+        <div class="hero-image">
+            <img src="https://img.icons8.com/color/400/000000/artificial-intelligence.png" alt="AI Medical Analysis">
+        </div>
+    </div>
+</div>
+
+<div class="features-section">
+    <div class="container">
+        <h2 class="section-title">
+            <img src="https://img.icons8.com/color/48/000000/star.png" alt="Star">
+            Our AI Models
+        </h2>
+        
+        <div class="features-grid">
+            <!-- YOLO Detection -->
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <img src="https://img.icons8.com/color/64/000000/target.png" alt="YOLO">
+                </div>
+                <h3>YOLO Detection</h3>
+                <p>Real-time object detection for identifying nerve structures with bounding boxes. Fast and accurate detection of:</p>
+                <ul>
+                    <li> Brachial Plexus Nerve</li>
+                    <li> Vagus Nerve</li>
+                </ul>
+                <div class="feature-stats">
+                    <span class="stat">
+                        <img src="https://img.icons8.com/color/20/000000/lightning-bolt.png" alt="Speed">
+                        Real-time
+                    </span>
+                    <span class="stat">
+                        <img src="https://img.icons8.com/color/20/000000/accuracy.png" alt="Accuracy">
+                        High Accuracy
+                    </span>
+                </div>
+            </div>
+
+            <!-- UNet Segmentation -->
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <img src="https://img.icons8.com/?size=100&id=gTN9eaZkKLFI&format=png&color=000000" width="60" height="60" alt="UNet">
+                </div>
+                <h3>UNet Segmentation</h3>
+                <p>Pixel-level segmentation using the classic U-Net architecture. Provides detailed boundary mapping for:</p>
+                <ul>
+                    <li> Precise pixel-level accuracy</li>
+                    <li> Complete structure mapping</li>
+                </ul>
+                <div class="feature-stats">
+                    <span class="stat">
+                        <img src="https://img.icons8.com/color/20/000000/microscope.png" alt="Precision">
+                        Pixel Precision
+                    </span>
+                    <span class="stat">
+                        <img src="https://img.icons8.com/color/20/000000/medical-heart.png" alt="Medical">
+                        Medical Grade
+                    </span>
+                </div>
+            </div>
+
+            <!-- UNet++ Segmentation -->
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <img src="https://img.icons8.com/color/64/000000/artificial-intelligence.png" alt="UNet++">
+                </div>
+                <h3>UNet++ Segmentation</h3>
+                <p>Advanced nested U-Net architecture with dense skip connections. Enhanced performance through:</p>
+                <ul>
+                    <li> Dense skip connections</li>
+                    <li> Superior accuracy</li>
+                </ul>
+                <div class="feature-stats">
+                    <span class="stat">
+                        <img src="https://img.icons8.com/color/20/000000/graph.png" alt="Performance">
+                        Best Performance
+                    </span>
+                    <span class="stat">
+                        <img src="https://img.icons8.com/color/20/000000/innovation.png" alt="Innovation">
+                        State-of-art
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="technology-section">
+    <div class="container">
+        <h2 class="section-title">
+            <img src="https://img.icons8.com/color/48/000000/processor.png" alt="Technology">
+            Technology Stack
+        </h2>
+        
+        <div class="tech-grid">
+            <div class="tech-item">
+                <img src="https://img.icons8.com/color/48/000000/python.png" alt="Python">
+                <span>Python</span>
+            </div>
+            <div class="tech-item">
+                <img src="https://img.icons8.com/color/48/000000/artificial-intelligence.png" alt="PyTorch">
+                <span>PyTorch</span>
+            </div>
+            <div class="tech-item">
+                <img src="https://img.icons8.com/color/48/000000/opencv.png" alt="OpenCV">
+                <span>OpenCV</span>
+            </div>
+            <div class="tech-item">
+                <img src="https://img.icons8.com/color/48/000000/flask.png" alt="Flask">
+                <span>Flask</span>
+            </div>
+            <div class="tech-item">
+                <img src="https://img.icons8.com/?size=100&id=5Io3uhjAxzUn&format=png&color=000000" width="40" height="40" alt="CUDA">
+                <span>CUDA</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="cta-section">
+    <div class="container">
+        <div class="cta-content">
+            <h2>
+                <img src="https://img.icons8.com/color/48/000000/rocket.png" alt="Rocket">
+                Ready to Analyze Your Medical Images?
+            </h2>
+            <p>Upload your ultrasound images and get instant AI-powered analysis</p>
+            <div class="cta-buttons">
+                <a href="{{ url_for('yolo_detection') }}" class="btn btn-primary btn-large">
+                    <img src="https://img.icons8.com/color/24/000000/search.png" alt="Detection">
+                    Try YOLO Detection
+                </a>
+                <a href="{{ url_for('segmentation') }}" class="btn btn-secondary btn-large">
+                    <img src="https://img.icons8.com/?size=100&id=GPFgoEtWNhdd&format=png&color=000000" width="30" height="30" alt="Segmentation">
+                    Try Segmentation
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

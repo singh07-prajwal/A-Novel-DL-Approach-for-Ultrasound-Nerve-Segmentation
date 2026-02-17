@@ -1,0 +1,346 @@
+{% extends "base.html" %}
+
+{% block title %}YOLO Detection - Nerve Detection{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <h1 class="page-title">
+            <img src="https://img.icons8.com/color/48/000000/search.png" alt="Detection">
+            YOLO Nerve Detection
+        </h1>
+        <p class="page-subtitle">Real-time detection of Brachial Plexus and Vagus nerves using YOLO algorithm</p>
+    </div>
+</div>
+
+<div class="detection-container">
+    <div class="container">
+        <!-- Upload Section -->
+        <div class="upload-card">
+            <div class="upload-header">
+                <img src="https://img.icons8.com/?size=100&id=qBD9CqcajAJt&format=png&color=000000" width="40" height="40" alt="Upload">
+                <h3>Upload Medical Image</h3>
+            </div>
+            
+            <form id="yoloForm" enctype="multipart/form-data">
+                <div class="upload-section" id="uploadSection">
+                    <input type="file" id="imageInput" name="file" accept="image/*,.tif" required>
+                    <div id="uploadText">
+                        <img src="https://img.icons8.com/color/64/000000/add-image.png" alt="Add Image">
+                        <p>Drop your medical image here or click to browse</p>
+                        <span class="file-types">Supports: JPG, PNG, JPEG, TIF</span>
+                        <button type="button" onclick="document.getElementById('imageInput').click()" class="browse-btn">
+                            <img src="https://img.icons8.com/color/20/000000/folder-invoices.png" alt="Browse">
+                            Browse Files
+                        </button>
+                    </div>
+                    <div id="imagePreview" style="display: none;">
+                        <img id="previewImg">
+                        <p id="selectedFileName"></p>
+                    </div>
+                </div>
+                
+                <div class="controls-section">
+                    <div class="control-group">
+                        <label for="confidence">
+                            <img src="https://img.icons8.com/color/20/000000/accuracy.png" alt="Confidence">
+                            Confidence Threshold: <span id="confValue">0.25</span>
+                        </label>
+                        <input type="range" id="confidence" name="confidence" min="0.1" max="0.9" step="0.05" value="0.25">
+                    </div>
+                    
+                    <button type="submit" id="detectBtn" class="btn btn-primary btn-large" disabled>
+                        <img src="https://img.icons8.com/color/24/000000/artificial-intelligence.png" alt="AI">
+                        Detect Nerves
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Loading Section -->
+        <div class="loading-section" id="loading" style="display: none;">
+            <div class="loader">
+                <div class="loader-brain">
+                    <img src="https://img.icons8.com/color/64/000000/brain-3.png" alt="Processing">
+                </div>
+            </div>
+            <h3>Processing your image...</h3>
+            <p>Our AI is analyzing the neural structures</p>
+        </div>
+        
+        <!-- Error Section -->
+        <div id="error" class="error-section" style="display: none;">
+            <img src="https://img.icons8.com/color/48/000000/error.png" alt="Error">
+            <div id="errorMessage"></div>
+        </div>
+        
+        <!-- Results Section -->
+        <div class="results-section" id="results" style="display: none;">
+            <div class="results-header">
+                <img src="https://img.icons8.com/color/32/000000/checkmark.png" alt="Success">
+                <h3>Detection Results</h3>
+            </div>
+            
+            <!-- Image Display -->
+            <div class="image-comparison">
+                <div class="image-box">
+                    <h4>
+                        <img src="https://img.icons8.com/color/24/000000/image.png" alt="Original">
+                        Original Image
+                    </h4>
+                    <img id="uploadedImage" class="result-image">
+                    <p id="uploadedImageName" class="image-name"></p>
+                </div>
+                
+                <div class="image-box">
+                    <h4>
+                        <img src="https://img.icons8.com/color/24/000000/target.png" alt="Detection">
+                        Detection Results
+                    </h4>
+                    <img id="resultImage" class="result-image">
+                    <p id="resultImageName" class="image-name"></p>
+                </div>
+            </div>
+            
+            <!-- Detection Summary -->
+            <div class="detection-summary">
+                <div class="summary-header">
+                    <img src="https://img.icons8.com/color/24/000000/report-card.png" alt="Summary">
+                    <h4>Detection Summary</h4>
+                </div>
+                <div id="detectionList"></div>
+            </div>
+            
+            <!-- Actions -->
+            <div class="result-actions">
+                <button onclick="downloadResult()" class="btn btn-secondary">
+                    <img src="https://img.icons8.com/color/20/000000/download.png" alt="Download">
+                    Download Result
+                </button>
+                <button onclick="clearResults()" class="btn btn-outline">
+                    <img src="https://img.icons8.com/color/20/000000/trash.png" alt="Clear">
+                    Clear Results
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentUploadedFile = null;
+let currentResultImage = null;
+
+// File input handling
+document.getElementById('imageInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        showImagePreview(file);
+        document.getElementById('detectBtn').disabled = false;
+    }
+});
+
+// Drag and drop handling
+const uploadSection = document.getElementById('uploadSection');
+
+uploadSection.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    uploadSection.classList.add('dragover');
+});
+
+uploadSection.addEventListener('dragleave', function(e) {
+    e.preventDefault();
+    uploadSection.classList.remove('dragover');
+});
+
+uploadSection.addEventListener('drop', function(e) {
+    e.preventDefault();
+    uploadSection.classList.remove('dragover');
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        const file = files[0];
+        document.getElementById('imageInput').files = files;
+        showImagePreview(file);
+        document.getElementById('detectBtn').disabled = false;
+    }
+});
+
+// Confidence slider
+document.getElementById('confidence').addEventListener('input', function(e) {
+    document.getElementById('confValue').textContent = e.target.value;
+});
+
+// Form submission
+document.getElementById('yoloForm').onsubmit = function(e) {
+    e.preventDefault();
+    
+    const fileInput = document.getElementById('imageInput');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        showError('Please select a file');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('confidence', document.getElementById('confidence').value);
+    
+    // Show loading
+    showLoading();
+    
+    fetch('/api/yolo-predict', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        hideLoading();
+        
+        if (data.success) {
+            showResults(data);
+        } else {
+            showError(data.error);
+        }
+    })
+    .catch(error => {
+        hideLoading();
+        showError('Network error: ' + error.message);
+    });
+};
+
+function showImagePreview(file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        document.getElementById('previewImg').src = e.target.result;
+        document.getElementById('selectedFileName').textContent = file.name;
+        document.getElementById('uploadText').style.display = 'none';
+        document.getElementById('imagePreview').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+}
+
+function showLoading() {
+    document.getElementById('loading').style.display = 'block';
+    document.getElementById('results').style.display = 'none';
+    document.getElementById('error').style.display = 'none';
+    document.getElementById('detectBtn').disabled = true;
+}
+
+function hideLoading() {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('detectBtn').disabled = false;
+}
+
+function showError(message) {
+    document.getElementById('errorMessage').textContent = message;
+    document.getElementById('error').style.display = 'block';
+    document.getElementById('results').style.display = 'none';
+}
+
+function showResults(data) {
+    // Store current files
+    currentUploadedFile = data.uploaded_image;
+    currentResultImage = data.result_image;
+    
+    // Show uploaded image
+    document.getElementById('uploadedImage').src = `/uploads/${data.uploaded_image}`;
+    document.getElementById('uploadedImageName').textContent = data.original_filename;
+    
+    // Show result image
+    if (data.result_image) {
+        document.getElementById('resultImage').src = `/results/${data.result_image}`;
+        document.getElementById('resultImageName').textContent = `Result: ${data.result_image}`;
+    } else {
+        document.getElementById('resultImage').src = `/uploads/${data.uploaded_image}`;
+        document.getElementById('resultImageName').textContent = 'No detections found';
+    }
+    
+    // Show detection details
+    let summaryHtml = `
+        <div class="detection-count">
+            <img src="https://img.icons8.com/color/24/000000/counter.png" alt="Count">
+            Found ${data.count} nerve structure(s)
+        </div>
+    `;
+    
+    if (data.detections.length > 0) {
+        data.detections.forEach((detection, index) => {
+            const colorClass = detection.class.toLowerCase().includes('brachial') ? 'brachial' : 'vagus';
+            const icon = detection.class.toLowerCase().includes('brachial') 
+                ? 'https://img.icons8.com/color/24/000000/heart-with-pulse.png'
+                : 'https://img.icons8.com/color/24/000000/brain.png';
+            
+            summaryHtml += `
+                <div class="detection-item ${colorClass}">
+                    <div class="detection-header">
+                        <img src="${icon}" alt="${detection.class}">
+                        <span class="detection-number">#${index + 1}</span>
+                        <strong>${detection.class}</strong>
+                    </div>
+                    <div class="detection-details">
+                        <div class="detection-metric">
+                            <img src="https://img.icons8.com/color/16/000000/accuracy.png" alt="Confidence">
+                            <span>Confidence: ${(detection.confidence * 100).toFixed(1)}%</span>
+                        </div>
+                        <div class="detection-metric">
+                            <img src="https://img.icons8.com/color/16/000000/map-marker.png" alt="Location">
+                            <span>Location: (${detection.bbox[0]}, ${detection.bbox[1]}) → (${detection.bbox[2]}, ${detection.bbox[3]})</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+    } else {
+        summaryHtml += `
+            <div class="no-detection">
+                <img src="https://img.icons8.com/color/48/000000/search.png" alt="No Results">
+                <p>No nerve structures detected in this image.</p>
+                <small>Try adjusting the confidence threshold or use a different image.</small>
+            </div>
+        `;
+    }
+    
+    document.getElementById('detectionList').innerHTML = summaryHtml;
+    document.getElementById('results').style.display = 'block';
+    
+    // Hide error if it was showing
+    document.getElementById('error').style.display = 'none';
+}
+
+function downloadResult() {
+    if (currentResultImage) {
+        const link = document.createElement('a');
+        link.href = `/results/${currentResultImage}`;
+        link.download = currentResultImage;
+        link.click();
+    }
+}
+
+function clearResults() {
+    // Clean up uploaded file
+    if (currentUploadedFile) {
+        fetch('/api/cleanup', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                uploaded_file: currentUploadedFile
+            })
+        });
+    }
+    
+    // Reset form and hide results
+    document.getElementById('yoloForm').reset();
+    document.getElementById('uploadText').style.display = 'block';
+    document.getElementById('imagePreview').style.display = 'none';
+    document.getElementById('results').style.display = 'none';
+    document.getElementById('error').style.display = 'none';
+    document.getElementById('detectBtn').disabled = true;
+    
+    currentUploadedFile = null;
+    currentResultImage = null;
+}
+</script>
+{% endblock %}

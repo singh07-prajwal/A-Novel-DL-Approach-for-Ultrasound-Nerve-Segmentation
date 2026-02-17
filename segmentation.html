@@ -1,0 +1,425 @@
+{% extends "base.html" %}
+
+{% block title %}Segmentation - Nerve Segmentation{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <h1 class="page-title">
+            <img src="https://img.icons8.com/?size=100&id=BlHaoV1CDL35&format=png&color=50B7F9" width="60" height="60" alt="Segmentation">
+            Neural Segmentation
+        </h1>
+        <p class="page-subtitle">Pixel-level segmentation using UNet and UNet++ architectures</p>
+    </div>
+</div>
+
+<div class="segmentation-container">
+    <div class="container">
+        <!-- Upload Section -->
+        <div class="upload-card">
+            <div class="upload-header">
+                <img src="https://img.icons8.com/?size=100&id=qBD9CqcajAJt&format=png&color=000000" width="40" height="40" alt="Upload">
+                <h3>Upload Medical Image</h3>
+            </div>
+            
+            <form id="segmentationForm" enctype="multipart/form-data">
+                <div class="upload-section" id="uploadSection">
+                    <input type="file" id="imageInput" name="file" accept="image/*,.tif" required>
+                    <div id="uploadText">
+                        <img src="https://img.icons8.com/color/64/000000/add-image.png" alt="Add Image">
+                        <p>Drop your medical image here or click to browse</p>
+                        <span class="file-types">Supports: JPG, PNG, JPEG, TIF</span>
+                        <button type="button" onclick="document.getElementById('imageInput').click()" class="browse-btn">
+                            <img src="https://img.icons8.com/color/20/000000/folder-invoices.png" alt="Browse">
+                            Browse Files
+                        </button>
+                    </div>
+                    <div id="imagePreview" style="display: none;">
+                        <img id="previewImg">
+                        <p id="selectedFileName"></p>
+                    </div>
+                </div>
+                
+                <div class="controls-section">
+                    <button type="submit" id="segmentBtn" class="btn btn-primary btn-large" disabled>
+                        <img src="https://img.icons8.com/?size=100&id=BlHaoV1CDL35&format=png&color=000000" width="30" height="30" alt="Segmentation">
+                        Generate Segmentation
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Loading Section -->
+        <div class="loading-section" id="loading" style="display: none;">
+            <div class="loader">
+                <div class="loader-brain">
+                    <img src="https://img.icons8.com/color/64/000000/brain-3.png" alt="Processing">
+                </div>
+            </div>
+            <h3>Processing segmentation...</h3>
+            <p>Our AI models are analyzing pixel-level structures</p>
+        </div>
+        
+        <!-- Error Section -->
+        <div id="error" class="error-section" style="display: none;">
+            <img src="https://img.icons8.com/color/48/000000/error.png" alt="Error">
+            <div id="errorMessage"></div>
+        </div>
+        
+        <!-- Results Section -->
+        <div class="results-section" id="results" style="display: none;">
+            <div class="results-header">
+                <img src="https://img.icons8.com/color/32/000000/checkmark.png" alt="Success">
+                <h3>Segmentation Results</h3>
+            </div>
+            
+            <!-- Model Comparison -->
+            <div class="model-tabs">
+                <button class="tab-btn active" onclick="showTab('original')">
+                    <img src="https://img.icons8.com/color/20/000000/image.png" alt="Original">
+                    Original
+                </button>
+                <button class="tab-btn" onclick="showTab('unet')" id="unetTab" style="display: none;">
+                    <img src="https://img.icons8.com/color/20/000000/neural-network.png" alt="UNet">
+                    UNet
+                </button>
+                <button class="tab-btn" onclick="showTab('unetpp')" id="unetppTab" style="display: none;">
+                    <img src="https://img.icons8.com/color/20/000000/artificial-intelligence.png" alt="UNet++">
+                    UNet++
+                </button>
+            </div>
+            
+            <!-- Image Display -->
+            <div class="segmentation-display">
+                <!-- Original Image Tab -->
+                <div id="original-tab" class="tab-content active">
+                    <div class="image-box">
+                        <h4>
+                            <img src="https://img.icons8.com/color/24/000000/image.png" alt="Original">
+                            Original Image
+                        </h4>
+                        <img id="uploadedImage" class="result-image">
+                        <p id="uploadedImageName" class="image-name"></p>
+                    </div>
+                </div>
+                
+                <!-- UNet Tab -->
+                <div id="unet-tab" class="tab-content">
+                    <div class="image-box">
+                        <h4>
+                            <img src="https://img.icons8.com/color/24/000000/neural-network.png" alt="UNet">
+                            UNet Segmentation
+                        </h4>
+                        <img id="unetImage" class="result-image">
+                        <div class="segmentation-stats" id="unetStats"></div>
+                    </div>
+                </div>
+                
+                <!-- UNet++ Tab -->
+                <div id="unetpp-tab" class="tab-content">
+                    <div class="image-box">
+                        <h4>
+                            <img src="https://img.icons8.com/color/24/000000/artificial-intelligence.png" alt="UNet++">
+                            UNet++ Segmentation
+                        </h4>
+                        <img id="unetppImage" class="result-image">
+                        <div class="segmentation-stats" id="unetppStats"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Model Comparison Chart -->
+            <div class="comparison-section" id="comparisonSection" style="display: none;">
+                <h4>
+                    <img src="https://img.icons8.com/color/24/000000/bar-chart.png" alt="Comparison">
+                    Model Comparison
+                </h4>
+                <div class="comparison-chart" id="comparisonChart"></div>
+            </div>
+            
+            <!-- Actions -->
+            <div class="result-actions">
+                <button onclick="downloadResults()" class="btn btn-secondary">
+                                        <img src="https://img.icons8.com/color/20/000000/download.png" alt="Download">
+                    Download Results
+                </button>
+                <button onclick="clearResults()" class="btn btn-outline">
+                    <img src="https://img.icons8.com/color/20/000000/trash.png" alt="Clear">
+                    Clear Results
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentUploadedFile = null;
+let currentResults = null;
+
+// File input handling
+document.getElementById('imageInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        showImagePreview(file);
+        document.getElementById('segmentBtn').disabled = false;
+    }
+});
+
+// Drag and drop handling
+const uploadSection = document.getElementById('uploadSection');
+
+uploadSection.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    uploadSection.classList.add('dragover');
+});
+
+uploadSection.addEventListener('dragleave', function(e) {
+    e.preventDefault();
+    uploadSection.classList.remove('dragover');
+});
+
+uploadSection.addEventListener('drop', function(e) {
+    e.preventDefault();
+    uploadSection.classList.remove('dragover');
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        const file = files[0];
+        document.getElementById('imageInput').files = files;
+        showImagePreview(file);
+        document.getElementById('segmentBtn').disabled = false;
+    }
+});
+
+// Form submission
+document.getElementById('segmentationForm').onsubmit = function(e) {
+    e.preventDefault();
+    
+    const fileInput = document.getElementById('imageInput');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        showError('Please select a file');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    // Show loading
+    showLoading();
+    
+    fetch('/api/segmentation-predict', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        hideLoading();
+        
+        if (data.success) {
+            showResults(data);
+        } else {
+            showError(data.error);
+        }
+    })
+    .catch(error => {
+        hideLoading();
+        showError('Network error: ' + error.message);
+    });
+};
+
+function showImagePreview(file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        document.getElementById('previewImg').src = e.target.result;
+        document.getElementById('selectedFileName').textContent = file.name;
+        document.getElementById('uploadText').style.display = 'none';
+        document.getElementById('imagePreview').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+}
+
+function showLoading() {
+    document.getElementById('loading').style.display = 'block';
+    document.getElementById('results').style.display = 'none';
+    document.getElementById('error').style.display = 'none';
+    document.getElementById('segmentBtn').disabled = true;
+}
+
+function hideLoading() {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('segmentBtn').disabled = false;
+}
+
+function showError(message) {
+    document.getElementById('errorMessage').textContent = message;
+    document.getElementById('error').style.display = 'block';
+    document.getElementById('results').style.display = 'none';
+}
+
+function showResults(data) {
+    currentUploadedFile = data.uploaded_image;
+    currentResults = data.results;
+    
+    // Show uploaded image
+    document.getElementById('uploadedImage').src = `/uploads/${data.uploaded_image}`;
+    document.getElementById('uploadedImageName').textContent = data.original_filename;
+    
+    // Show/hide tabs based on available results
+    if (data.results.unet) {
+        document.getElementById('unetTab').style.display = 'block';
+        document.getElementById('unetImage').src = `/results/${data.results.unet.result_image}`;
+        document.getElementById('unetStats').innerHTML = `
+            <div class="stat-item">
+                <img src="https://img.icons8.com/color/16/000000/area-chart.png" alt="Area">
+                <span>Mask Area: ${data.results.unet.mask_area.toFixed(0)} pixels</span>
+            </div>
+            <div class="stat-item">
+                <img src="https://img.icons8.com/color/16/000000/percentage.png" alt="Percentage">
+                <span>Coverage: ${data.results.unet.mask_percentage.toFixed(2)}%</span>
+            </div>
+        `;
+    }
+    
+    if (data.results.unetpp) {
+        document.getElementById('unetppTab').style.display = 'block';
+        document.getElementById('unetppImage').src = `/results/${data.results.unetpp.result_image}`;
+        document.getElementById('unetppStats').innerHTML = `
+            <div class="stat-item">
+                <img src="https://img.icons8.com/color/16/000000/area-chart.png" alt="Area">
+                <span>Mask Area: ${data.results.unetpp.mask_area.toFixed(0)} pixels</span>
+            </div>
+            <div class="stat-item">
+                <img src="https://img.icons8.com/color/16/000000/percentage.png" alt="Percentage">
+                <span>Coverage: ${data.results.unetpp.mask_percentage.toFixed(2)}%</span>
+            </div>
+        `;
+    }
+    
+    // Show comparison if both models available
+    if (data.results.unet && data.results.unetpp) {
+        document.getElementById('comparisonSection').style.display = 'block';
+        showComparison(data.results);
+    }
+    
+    document.getElementById('results').style.display = 'block';
+    document.getElementById('error').style.display = 'none';
+}
+
+function showTab(tabName) {
+    // Hide all tabs
+    const tabs = document.querySelectorAll('.tab-content');
+    tabs.forEach(tab => tab.classList.remove('active'));
+    
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    tabBtns.forEach(btn => btn.classList.remove('active'));
+    
+    // Show selected tab
+    document.getElementById(tabName + '-tab').classList.add('active');
+    event.target.closest('.tab-btn').classList.add('active');
+}
+
+function showComparison(results) {
+    const comparisonHtml = `
+        <div class="comparison-grid">
+            <div class="comparison-item">
+                <h5>
+                    <img src="https://img.icons8.com/color/20/000000/neural-network.png" alt="UNet">
+                    UNet
+                </h5>
+                <div class="comparison-metrics">
+                    <div class="metric">
+                        <span class="metric-label">Mask Area:</span>
+                        <span class="metric-value">${results.unet.mask_area.toFixed(0)} px</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Coverage:</span>
+                        <span class="metric-value">${results.unet.mask_percentage.toFixed(2)}%</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="comparison-vs">
+                <img src="https://img.icons8.com/color/24/000000/compare.png" alt="VS">
+                <span>VS</span>
+            </div>
+            
+            <div class="comparison-item">
+                <h5>
+                    <img src="https://img.icons8.com/color/20/000000/artificial-intelligence.png" alt="UNet++">
+                    UNet++
+                </h5>
+                <div class="comparison-metrics">
+                    <div class="metric">
+                        <span class="metric-label">Mask Area:</span>
+                        <span class="metric-value">${results.unetpp.mask_area.toFixed(0)} px</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Coverage:</span>
+                        <span class="metric-value">${results.unetpp.mask_percentage.toFixed(2)}%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('comparisonChart').innerHTML = comparisonHtml;
+}
+
+function downloadResults() {
+    if (currentResults) {
+        // Create a download for each available result
+        if (currentResults.unet) {
+            const link = document.createElement('a');
+            link.href = `/results/${currentResults.unet.result_image}`;
+            link.download = `unet_${currentResults.unet.result_image}`;
+            link.click();
+        }
+        
+        if (currentResults.unetpp) {
+            setTimeout(() => {
+                const link = document.createElement('a');
+                link.href = `/results/${currentResults.unetpp.result_image}`;
+                link.download = `unetpp_${currentResults.unetpp.result_image}`;
+                link.click();
+            }, 1000);
+        }
+    }
+}
+
+function clearResults() {
+    // Clean up uploaded file
+    if (currentUploadedFile) {
+        fetch('/api/cleanup', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                uploaded_file: currentUploadedFile
+            })
+        });
+    }
+    
+    // Reset form and hide results
+    document.getElementById('segmentationForm').reset();
+    document.getElementById('uploadText').style.display = 'block';
+    document.getElementById('imagePreview').style.display = 'none';
+    document.getElementById('results').style.display = 'none';
+    document.getElementById('error').style.display = 'none';
+    document.getElementById('segmentBtn').disabled = true;
+    
+    // Hide tabs
+    document.getElementById('unetTab').style.display = 'none';
+    document.getElementById('unetppTab').style.display = 'none';
+    document.getElementById('comparisonSection').style.display = 'none';
+    
+    // Reset to original tab
+    showTab('original');
+    
+    currentUploadedFile = null;
+    currentResults = null;
+}
+</script>
+{% endblock %}
